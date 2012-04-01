@@ -1,12 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:padding="20dp" >
+    
+	<LinearLayout
+		android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="vertical">
+	    
+	    <TextView
+	        android:id="@+id/lbl_latitude"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/main_label_latitude" />
+	
+	    <TextView
+	        android:id="@+id/txt_latitude"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:ems="10" 
+	        android:textAppearance="?android:attr/textAppearanceLarge" >
+	    </TextView>
+	    
+	    <TextView
+	        android:id="@+id/lbl_longitude"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/main_label_longitude" />
+	
+	    <TextView
+	        android:id="@+id/txt_longitude"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:ems="10"
+	        android:textAppearance="?android:attr/textAppearanceLarge" >
+	    </TextView>
+	    
+	    <TextView
+	        android:id="@+id/lbl_altitude"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/main_label_altitude" />
+	
+	    <TextView
+	        android:id="@+id/txt_altitude"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:ems="10" 
+	        android:textAppearance="?android:attr/textAppearanceLarge" >
+	    </TextView>
+	    
+	    <TextView
+	        android:id="@+id/lbl_speed"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/main_label_speed" />
+	
+	    <TextView
+	        android:id="@+id/txt_speed"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:ems="10" 
+	        android:textAppearance="?android:attr/textAppearanceLarge" >
+	    </TextView>
 
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/hello" />
+	    <TextView
+	        android:id="@+id/lbl_callsign"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/main_label_callsign" />
 
-</LinearLayout>
+	    <EditText
+	        android:id="@+id/txt_callsign"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:inputType="text"
+	        android:ems="10" >
+	    </EditText>
+
+	    <Button
+	        android:id="@+id/btn_toggle"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:gravity="center"
+	        android:layout_gravity="center"
+	        android:text="@string/main_button_toggle" />
+	    
+	    <TextView
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_gravity="center"
+	        android:gravity="center"
+	        android:text="@string/main_label_about" />	    
+
+	</LinearLayout>
+</ScrollView>

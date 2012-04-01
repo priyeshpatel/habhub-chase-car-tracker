@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, Main!</string>
-    <string name="app_name">HabHub Chase Car Tracker</string>
+    <string name="app_name_full">Chase Car Tracker</string>
+    <string name="app_name">Chase Car</string>
+    <string name="main_label_about">by Priyesh Patel</string>
+    <string name="main_label_latitude">Latitude</string>
+    <string name="main_label_longitude">Longitude</string>
+    <string name="main_label_altitude">Altitude</string>
+    <string name="main_label_speed">Speed</string>
+    <string name="main_label_callsign">Callsign</string>
+    <string name="main_button_toggle">On</string>
 
 </resources>
