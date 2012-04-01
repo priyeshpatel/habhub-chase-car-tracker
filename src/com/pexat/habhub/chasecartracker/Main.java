@@ -1,19 +1,5 @@
 package com.pexat.habhub.chasecartracker;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URI;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONException;
-import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
@@ -37,15 +23,9 @@ public class Main extends Activity
 	protected TextView txt_latitude, txt_longitude, txt_altitude, txt_speed;
 	protected Button btn_toggle;
 	protected EditText txt_callsign;
-
-	protected double latitude, longitude, altitude;
-	protected float speed;
-
-	protected String habitat_uri = "http://habitat.habhub.org/";
-	protected String habitat_db = "habitat";
 	
 	protected Thread httpThread;
-
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -62,36 +42,21 @@ public class Main extends Activity
 		locationListener = new MainLocationListener();
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 15000, 0, locationListener);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 15000, 0, locationListener);
+		location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		updateFields();
 		
 		httpThread = new Thread(new Runnable() {
 			public void run()
 			{
 				while (true)
-				{
-					Time t = new Time(Time.TIMEZONE_UTC);
-					t.setToNow();
-					String timestamp = t.format("%s");
-					String hour = Integer.toString(t.hour);
-					String minute = Integer.toString(t.minute);
-					String second = Integer.toString(t.second);
+				{					
+					Time time = new Time(Time.TIMEZONE_UTC);
+					time.setToNow();
 					
-					String uuid = getUUID();
-					String output = "{\"type\": \"listener_telemetry\",\"time_created\": " + timestamp + ",\"time_uploaded\": " + timestamp + ",\"data\": {\"callsign\": \"" + txt_callsign.getText() + "\",\"time\": {\"hour\": " + hour + ",\"minute\": " + minute + ",\"second\": " + second + "},\"latitude\": " + Double.toString(latitude) + ",\"longitude\": " + Double.toString(longitude) + ",\"speed\": " + Float.toString(speed) + ",\"altitude\": " + Double.toString(altitude) + "}}";
-
-					System.out.println(output);
-					
-					HttpClient httpclient = new DefaultHttpClient();
-		            HttpPut httpput = new HttpPut(habitat_uri + habitat_db + "/" + uuid);
-
-		            try {
-		            	StringEntity se = new StringEntity(output);
-		            	httpput.setEntity((HttpEntity) se);
-		                httpclient.execute(httpput);
-		            } catch (ClientProtocolException e) {
-		            	e.printStackTrace();
-		            } catch (IOException e) {
-		                e.printStackTrace();
-		            }
+					ListenerTelemetry telemetry = new ListenerTelemetry(txt_callsign.getText().toString(), location, time, getDevice(), getClient());
+														
+					HabitatInterface.sendListenerTelemetry(telemetry);
 					
 					try
 					{
@@ -140,15 +105,8 @@ public class Main extends Activity
 		public void onLocationChanged(Location l)
 		{
 			location = l;
-			latitude = location.getLatitude();
-			longitude = location.getLongitude();
-			altitude = location.getAltitude();
-			speed = location.getSpeed();
 
-			txt_latitude.setText(Double.toString(latitude));
-			txt_longitude.setText(Double.toString(longitude));
-			txt_altitude.setText(Double.toString(altitude));
-			txt_speed.setText(Double.toString(speed));
+			updateFields();
 		}
 
 		public void onProviderDisabled(String p)
@@ -163,55 +121,24 @@ public class Main extends Activity
 		{
 		}
 	}
-
-	protected String getUUID()
+	
+	protected String getDevice()
 	{
-		BufferedReader in = null;
-		String page = "";
-		try
-		{
-			HttpClient client = new DefaultHttpClient();
-			HttpGet request = new HttpGet();
-			request.setURI(new URI(habitat_uri + "_uuids"));
-			HttpResponse response = client.execute(request);
-			in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-			StringBuffer sb = new StringBuffer("");
-			String line = "";
-			String NL = System.getProperty("line.separator");
-			while ((line = in.readLine()) != null)
-			{
-				sb.append(line + NL);
-			}
-			in.close();
-			page = sb.toString();
-		} 
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			if (in != null)
-			{
-				try
-				{
-					in.close();
-				} catch (IOException e)
-				{
-					e.printStackTrace();
-				}
-			}
-		}
+		String id = "%s %s; Android %s";
 		
-		try
-		{
-			JSONObject j = new JSONObject(page);
-			page = j.getJSONArray("uuids").getString(0);
-		} catch (JSONException e)
-		{
-			e.printStackTrace();
-		}
-		
-		return page;
+		return String.format(id, android.os.Build.BRAND, android.os.Build.MODEL, android.os.Build.VERSION.RELEASE);
+	}
+	
+	protected String getClient()
+	{		
+		return "HabHub Chase Car Tracker; Priyesh Patel";
+	}
+	
+	protected void updateFields()
+	{
+		txt_latitude.setText(Double.toString(location.getLatitude()));
+		txt_longitude.setText(Double.toString(location.getLongitude()));
+		txt_altitude.setText(Double.toString(location.getAltitude()));
+		txt_speed.setText(Double.toString(location.getSpeed()));
 	}
 }
