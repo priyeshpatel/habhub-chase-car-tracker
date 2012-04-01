@@ -1,5 +1,5 @@
 # HabHub Android Chase Car Application
-![Chase Car Logo](/resources/icon-xh.png)
+![Chase Car Logo](https://github.com/PriyeshPatel/habhub-chase-car-tracker/raw/master/resources/icon.png)
 An Android application to relay location data from the device to Habitat as `listener_telemetry`. Data is then passed onto [SpaceNear.Us](http://spacenear.us/tracker/) to be displayed as a chase car.
 
 ## Market
