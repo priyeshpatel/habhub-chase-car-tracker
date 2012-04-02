@@ -13,4 +13,9 @@ Written by Priyesh Patel. See AUTHORS for more information.
 See CHANGELOG.md.
 
 ## License
-Licensed under an [Attribution-NonCommercial-ShareAlike 3.0 Unported License](http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode). See LICENSE for more information.
+
+### Source code
+See LICENSE.
+
+### Artwork
+Licensed under [Attribution-NonCommercial-ShareAlike 2.0 UK: England & Wales (CC BY-NC-SA 2.0)](http://creativecommons.org/licenses/by-nc-sa/2.0/uk/legalcode).
