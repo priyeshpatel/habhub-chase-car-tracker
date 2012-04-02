@@ -156,6 +156,8 @@ public class TrackerService extends Service {
 	}
 
 	private void sendData(Location l, Time t) {
+		if (l == null) return;
+		
 		for (int i = messengerClients.size() - 1; i >= 0; i--) {
 			try {
 				Bundle b = new Bundle();
@@ -221,10 +223,8 @@ public class TrackerService extends Service {
 	 *            one
 	 */
 	protected boolean isBetterLocation(Location location, Location currentBestLocation) {
-		if (currentBestLocation == null) {
-			// A new location is always better than no location
-			return true;
-		}
+		if (currentBestLocation == null) return true;
+		if (location == null) return false;
 
 		// Check whether the new location fix is newer or older
 		long timeDelta = location.getTime() - currentBestLocation.getTime();
