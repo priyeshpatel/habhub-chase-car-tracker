@@ -14,16 +14,13 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-public class SimpleHttp
-{
+public class SimpleHttp {
 
-	public static String get(String url)
-	{
+	public static String get(String url) {
 		BufferedReader reader = null;
 		String page = "";
 
-		try
-		{
+		try {
 			HttpClient client = new DefaultHttpClient();
 			HttpGet request = new HttpGet();
 
@@ -31,33 +28,26 @@ public class SimpleHttp
 
 			HttpResponse response = client.execute(request);
 
-			reader = new BufferedReader(new InputStreamReader(response
-					.getEntity().getContent()));
+			reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
 			StringBuffer buffer = new StringBuffer("");
 			String line = "";
 			String newline = System.getProperty("line.separator");
 
-			while ((line = reader.readLine()) != null)
-			{
+			while ((line = reader.readLine()) != null) {
 				buffer.append(line + newline);
 			}
 
 			reader.close();
 
 			page = buffer.toString();
-		} catch (Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
-		} finally
-		{
-			if (reader != null)
-			{
-				try
-				{
+		} finally {
+			if (reader != null) {
+				try {
 					reader.close();
-				} catch (IOException e)
-				{
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
@@ -66,38 +56,30 @@ public class SimpleHttp
 		return page;
 	}
 
-	public static void post(String url, HttpEntity data)
-	{
+	public static void post(String url, HttpEntity data) {
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpPost httpost = new HttpPost(url);
 
-		try
-		{
+		try {
 			httpost.setEntity(data);
 			httpclient.execute(httpost);
-		} catch (ClientProtocolException e)
-		{
+		} catch (ClientProtocolException e) {
 			e.printStackTrace();
-		} catch (IOException e)
-		{
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void put(String url, HttpEntity data)
-	{
+	public static void put(String url, HttpEntity data) {
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpPut httpput = new HttpPut(url);
 
-		try
-		{
+		try {
 			httpput.setEntity(data);
 			httpclient.execute(httpput);
-		} catch (ClientProtocolException e)
-		{
+		} catch (ClientProtocolException e) {
 			e.printStackTrace();
-		} catch (IOException e)
-		{
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

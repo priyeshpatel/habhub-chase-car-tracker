@@ -27,8 +27,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class Main extends Activity
-{
+public class Main extends Activity {
 	// Preferences
 	public static final String PREFS_NAME = "ChaseCarTrackerPrefs";
 
@@ -50,10 +49,9 @@ public class Main extends Activity
 	/**
 	 * Activity Setup
 	 */
-	
+
 	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
@@ -68,25 +66,20 @@ public class Main extends Activity
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 		setNewCallsign(settings.getString("callsign", ""));
 
-		if (trackerServiceRunning())
-		{
+		if (trackerServiceRunning()) {
 			doBindService();
 			btn_toggle.setText("Stop Tracker");
 		}
 
-		btn_toggle.setOnClickListener(new OnClickListener()
-		{
-			public void onClick(View v)
-			{
-				if (!isBound)
-				{
+		btn_toggle.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (!isBound) {
 					Intent i = new Intent(Main.this, TrackerService.class);
 					i.putExtra("callsign", callsign);
 					startService(i);
 					doBindService();
 					btn_toggle.setText("Stop Tracker");
-				} else
-				{
+				} else {
 					doUnbindService();
 					stopService(new Intent(Main.this, TrackerService.class));
 					btn_toggle.setText("Start Tracker");
@@ -96,14 +89,11 @@ public class Main extends Activity
 	}
 
 	@Override
-	public void onDestroy()
-	{
+	public void onDestroy() {
 		super.onDestroy();
-		try
-		{
+		try {
 			doUnbindService();
-		} catch (Throwable t)
-		{
+		} catch (Throwable t) {
 			t.printStackTrace();
 		}
 	}
@@ -111,15 +101,12 @@ public class Main extends Activity
 	/**
 	 * Service Communications
 	 */
-	
-	private class TrackerServiceIncomingHandler extends Handler
-	{
+
+	private class TrackerServiceIncomingHandler extends Handler {
 		@Override
-		public void handleMessage(Message msg)
-		{
-			switch (msg.what)
-			{
-				case TrackerService.MSG_GPS_DATA:
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+				case TrackerService.MSG_GPS_DATA :
 					Bundle b = msg.getData();
 					txt_latitude.setText(b.getString("longitude"));
 					txt_longitude.setText(b.getString("latitude"));
@@ -127,58 +114,49 @@ public class Main extends Activity
 					txt_speed.setText(b.getString("speed"));
 					txt_lastupdated.setText(b.getString("time"));
 					break;
-				default:
+				default :
 					super.handleMessage(msg);
 					break;
 			}
 		}
 	}
 
-	private ServiceConnection tsConnection = new ServiceConnection()
-	{
-		public void onServiceConnected(ComponentName name, IBinder service)
-		{
+	private ServiceConnection tsConnection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName name, IBinder service) {
 			tsOutgoing = new Messenger(service);
-			try
-			{
+			try {
 				Message msg = Message.obtain(null, TrackerService.MSG_REGISTER_CLIENT);
 				msg.replyTo = tsIncoming;
 				tsOutgoing.send(msg);
-			} catch (RemoteException e)
-			{
+			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
 
-		public void onServiceDisconnected(ComponentName name)
-		{
+		public void onServiceDisconnected(ComponentName name) {
 			tsOutgoing = null;
 		}
 	};
 
-	private void doBindService()
-	{
+	private void doBindService() {
 		bindService(new Intent(this, TrackerService.class), tsConnection, Context.BIND_AUTO_CREATE);
 		isBound = true;
 	}
 
-	private void doUnbindService()
-	{
-		if (!isBound) return;
+	private void doUnbindService() {
+		if (!isBound)
+			return;
 
-		if (tsOutgoing != null)
-		{
-			try
-			{
+		if (tsOutgoing != null) {
+			try {
 				Message msg = Message.obtain(null, TrackerService.MSG_DEREGISTER_CLIENT);
 				msg.replyTo = tsIncoming;
 				tsOutgoing.send(msg);
-			} catch (RemoteException e)
-			{
+			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
-		
+
 		unbindService(tsConnection);
 		isBound = false;
 	}
@@ -186,64 +164,54 @@ public class Main extends Activity
 	/**
 	 * Dialog & Menu
 	 */
-	
+
 	@Override
-	protected Dialog onCreateDialog(int id)
-	{
-		switch (id)
-		{
-			case DIALOG_SET_CALLSIGN:
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+			case DIALOG_SET_CALLSIGN :
 				LayoutInflater inflater = LayoutInflater.from(this);
 				final View layout = inflater.inflate(R.layout.callsign_dialog, null);
 				final EditText txt_editCallsign = (EditText) layout.findViewById(R.id.txt_callsign_dialog);
 				txt_editCallsign.setText(callsign);
 
-				final AlertDialog d = new AlertDialog.Builder(this).setTitle("Set Callsign").setView(layout)
-						.setPositiveButton("OK", null).create();
+				final AlertDialog d = new AlertDialog.Builder(this).setTitle("Set Callsign").setView(layout).setPositiveButton("OK", null).create();
 
-				d.setOnDismissListener(new DialogInterface.OnDismissListener()
-				{
-					public void onDismiss(DialogInterface dialog)
-					{
+				d.setOnDismissListener(new DialogInterface.OnDismissListener() {
+					public void onDismiss(DialogInterface dialog) {
 						String nc = txt_editCallsign.getText().toString();
-						if (nc.equals(""))
-						{
+						if (nc.equals("")) {
 							txt_editCallsign.setError("Please enter a callsign");
 							d.show();
-						} else
-						{
+						} else {
 							setNewCallsign(nc);
 						}
 					}
 				});
 
 				return d;
-				
-			default:
+
+			default :
 				return super.onCreateDialog(id);
 		}
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
-	{
+	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.options, menu);
 		return true;
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		switch (item.getItemId())
-		{
-			case R.id.opt_callsign:
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.opt_callsign :
 				showDialog(DIALOG_SET_CALLSIGN);
 				return true;
-			case R.id.opt_about:
-
+			case R.id.opt_about :
+				startActivity(new Intent(this, About.class));
 				return true;
-			default:
+			default :
 				return super.onOptionsItemSelected(item);
 		}
 	}
@@ -251,15 +219,12 @@ public class Main extends Activity
 	/**
 	 * Helper Functions
 	 */
-	
+
 	// Check if tracker service is running
-	private boolean trackerServiceRunning()
-	{
+	private boolean trackerServiceRunning() {
 		ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-		for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE))
-		{
-			if ("com.pexat.habhub.chasecartracker.TrackerService".equals(service.service.getClassName()))
-			{
+		for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+			if ("com.pexat.habhub.chasecartracker.TrackerService".equals(service.service.getClassName())) {
 				return true;
 			}
 		}
@@ -267,10 +232,8 @@ public class Main extends Activity
 	}
 
 	// Set a new callsign
-	private void setNewCallsign(String c)
-	{
-		if (c.equals(""))
-		{
+	private void setNewCallsign(String c) {
+		if (c.equals("")) {
 			showDialog(DIALOG_SET_CALLSIGN);
 			return;
 		}
@@ -283,18 +246,15 @@ public class Main extends Activity
 		editor.putString("callsign", callsign);
 		editor.commit();
 
-		if (isBound && tsOutgoing != null)
-		{
-			try
-			{
+		if (isBound && tsOutgoing != null) {
+			try {
 				Bundle b = new Bundle();
 				b.putString("callsign", callsign);
 				Message msg = Message.obtain(null, TrackerService.MSG_SET_CALLSIGN);
 				msg.setData(b);
 				msg.replyTo = tsIncoming;
 				tsOutgoing.send(msg);
-			} catch (RemoteException e)
-			{
+			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
