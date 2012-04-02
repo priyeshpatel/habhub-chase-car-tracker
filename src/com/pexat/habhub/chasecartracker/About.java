@@ -3,7 +3,6 @@ package com.pexat.habhub.chasecartracker;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,7 +13,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 public class About extends ListActivity {
-	String application_version = "unknown";
 
 	String data[][];
 
@@ -22,17 +20,11 @@ public class About extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		try {
-			application_version = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0).versionName;
-		} catch (NameNotFoundException e) {
-			e.printStackTrace();
-		}
-
 		data = new String[][]{
 				{"Author", "Priyesh Patel"},
-				{"Version", application_version},
-				{"Release Date", getString(R.string.release_date)},
-				{"Device Information", getDeviceInformation()}
+				{"Version", AppInfo.getApplicationVersion(getApplicationContext())},
+				{"Device Information", AppInfo.getDevice()},
+				{"Device Software", AppInfo.getDeviceSoftware()}
 		};
 
 		setListAdapter(new TwoLineArrayAdapter(this, data));
@@ -88,15 +80,5 @@ public class About extends ListActivity {
 		public String lineTwoText(String[] t) {
 			return t[1];
 		}
-	}
-
-	/**
-	 * Helper Functions
-	 */
-	
-	private String getDeviceInformation() {
-		String id = "%s %s; Android %s";
-
-		return String.format(id, android.os.Build.BRAND, android.os.Build.MODEL, android.os.Build.VERSION.RELEASE);
 	}
 }

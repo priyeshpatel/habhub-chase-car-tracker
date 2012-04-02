@@ -20,16 +20,18 @@ public class ListenerTelemetry {
 	public double speed;
 	public long altitude;
 	public String device;
+	public String device_software;
 	public String application;
+	public String application_version;
 
 	public ListenerTelemetry() {
 	}
 
-	public ListenerTelemetry(String c, Location l, Time t, String device, String application) {
+	public ListenerTelemetry(String c, Location l, Time t, String d, String ds, String a, String av) {
 		this.setCallsign(c);
 		this.setLocationData(l);
 		this.setTimeData(t);
-		this.setClient(device, application);
+		this.setClient(d, ds, a, av);
 	}
 
 	public void setLocationData(Location l) {
@@ -51,9 +53,11 @@ public class ListenerTelemetry {
 		this.callsign = c;
 	}
 
-	public void setClient(String device, String application) {
-		this.device = device;
-		this.application = application;
+	public void setClient(String d, String ds, String a, String av) {
+		this.device = d;
+		this.device_software = ds;
+		this.application = a;
+		this.application_version = av;
 	}
 
 	public String getJSON() {
@@ -74,7 +78,9 @@ public class ListenerTelemetry {
 			data.put("callsign", this.callsign);
 
 			client.put("device", this.device);
+			client.put("device_software", this.device_software);
 			client.put("application", this.application);
+			client.put("application_version", this.application_version);
 
 			time.put("hour", this.hour);
 			time.put("minute", this.minute);

@@ -57,7 +57,7 @@ public class TrackerService extends Service {
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 60000, 0, locationListener);
 		location = null;
-		
+
 		if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
 			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 60000, 0, locationListener);
 			Location networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -109,7 +109,8 @@ public class TrackerService extends Service {
 					Time time = new Time(Time.TIMEZONE_UTC);
 					time.setToNow();
 
-					ListenerTelemetry telemetry = new ListenerTelemetry(callsign, location, time, getDevice(), getClient());
+					ListenerTelemetry telemetry = new ListenerTelemetry(callsign, location, time, AppInfo.getDevice(), AppInfo.getDeviceSoftware(), AppInfo.getApplication(),
+							AppInfo.getApplicationVersion(getApplicationContext()));
 
 					HabitatInterface.sendListenerTelemetry(telemetry);
 				}
@@ -156,8 +157,9 @@ public class TrackerService extends Service {
 	}
 
 	private void sendData(Location l, Time t) {
-		if (l == null) return;
-		
+		if (l == null)
+			return;
+
 		for (int i = messengerClients.size() - 1; i >= 0; i--) {
 			try {
 				Bundle b = new Bundle();
@@ -193,20 +195,6 @@ public class TrackerService extends Service {
 	}
 
 	/**
-	 * Helper Functions
-	 */
-
-	private String getDevice() {
-		String id = "%s %s; Android %s";
-
-		return String.format(id, android.os.Build.BRAND, android.os.Build.MODEL, android.os.Build.VERSION.RELEASE);
-	}
-
-	private String getClient() {
-		return "HabHub Chase Car Tracker; Priyesh Patel";
-	}
-
-	/**
 	 * GPS Helper Functions
 	 */
 
@@ -223,8 +211,10 @@ public class TrackerService extends Service {
 	 *            one
 	 */
 	protected boolean isBetterLocation(Location location, Location currentBestLocation) {
-		if (currentBestLocation == null) return true;
-		if (location == null) return false;
+		if (currentBestLocation == null)
+			return true;
+		if (location == null)
+			return false;
 
 		// Check whether the new location fix is newer or older
 		long timeDelta = location.getTime() - currentBestLocation.getTime();

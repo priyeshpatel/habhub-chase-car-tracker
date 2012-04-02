@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">Chase Car Tracker</string>
-    <string name="release_date">02 April 2012</string>
     <string name="author_url">http://pexat.com</string>
        
     <string name="service_name">Chase Car Service</string>
