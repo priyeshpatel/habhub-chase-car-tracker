@@ -3,12 +3,15 @@
 
     <string name="app_name_full">Chase Car Tracker</string>
     <string name="app_name">Chase Car</string>
-    <string name="main_label_about">by Priyesh Patel</string>
+    <string name="service_name">Chase Car Service</string>
+    <string name="service_notification">Chase Car Tracker Running</string>
+    <string name="service_notification_title">Chase Car Tracker</string>
     <string name="main_label_latitude">Latitude</string>
     <string name="main_label_longitude">Longitude</string>
     <string name="main_label_altitude">Altitude</string>
     <string name="main_label_speed">Speed</string>
     <string name="main_label_callsign">Callsign</string>
-    <string name="main_button_toggle">On</string>
+    <string name="main_label_last_updated">Last Updated</string>
+    <string name="main_button_toggle">Start Tracker</string>
 
 </resources>

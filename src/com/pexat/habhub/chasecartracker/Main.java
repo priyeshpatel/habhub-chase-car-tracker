@@ -1,144 +1,302 @@
 package com.pexat.habhub.chasecartracker;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.format.Time;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.location.LocationManager;
-import android.location.LocationListener;
-import android.location.Location;
 
 public class Main extends Activity
 {
-	protected LocationManager locationManager;
-	protected LocationListener locationListener;
-	protected Location location;
+	// Preferences
+	public static final String PREFS_NAME = "ChaseCarTrackerPrefs";
 
-	protected TextView txt_latitude, txt_longitude, txt_altitude, txt_speed;
-	protected Button btn_toggle;
-	protected EditText txt_callsign;
-	
-	protected Thread httpThread;
+	// Dialogs
+	private static final int DIALOG_SET_CALLSIGN = 1;
+
+	// UI Elements
+	private TextView txt_latitude, txt_longitude, txt_altitude, txt_speed, txt_callsign, txt_lastupdated;
+	private Button btn_toggle;
+
+	// Service
+	private Messenger tsOutgoing = null;
+	private boolean isBound = false;
+	private final Messenger tsIncoming = new Messenger(new TrackerServiceIncomingHandler());
+
+	// Current callsign
+	private String callsign;
+
+	/**
+	 * Activity Setup
+	 */
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		
+
 		txt_latitude = (TextView) findViewById(R.id.txt_latitude);
 		txt_longitude = (TextView) findViewById(R.id.txt_longitude);
 		txt_altitude = (TextView) findViewById(R.id.txt_altitude);
 		txt_speed = (TextView) findViewById(R.id.txt_speed);
+		txt_callsign = (TextView) findViewById(R.id.txt_callsign);
+		txt_lastupdated = (TextView) findViewById(R.id.txt_last_updated);
 		btn_toggle = (Button) findViewById(R.id.btn_toggle);
-		txt_callsign = (EditText) findViewById(R.id.txt_callsign);
 
-		locationListener = new MainLocationListener();
-		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 15000, 0, locationListener);
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 15000, 0, locationListener);
-		location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		updateFields();
-		
-		httpThread = new Thread(new Runnable() {
-			public void run()
-			{
-				while (true)
-				{					
-					Time time = new Time(Time.TIMEZONE_UTC);
-					time.setToNow();
-					
-					ListenerTelemetry telemetry = new ListenerTelemetry(txt_callsign.getText().toString(), location, time, getDevice(), getClient());
-														
-					HabitatInterface.sendListenerTelemetry(telemetry);
-					
-					try
-					{
-						Thread.sleep(30000);
-					} catch (InterruptedException e)
-					{
-						e.printStackTrace();
-					}
-				}
-			}
-			
-		});
-		
-		btn_toggle.setOnClickListener(new OnClickListener() {
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		setNewCallsign(settings.getString("callsign", ""));
+
+		if (trackerServiceRunning())
+		{
+			doBindService();
+			btn_toggle.setText("Stop Tracker");
+		}
+
+		btn_toggle.setOnClickListener(new OnClickListener()
+		{
 			public void onClick(View v)
 			{
-				if (!httpThread.isAlive())
+				if (!isBound)
 				{
-					httpThread.start();
-					btn_toggle.setText("Running...");
+					Intent i = new Intent(Main.this, TrackerService.class);
+					i.putExtra("callsign", callsign);
+					startService(i);
+					doBindService();
+					btn_toggle.setText("Stop Tracker");
+				} else
+				{
+					doUnbindService();
+					stopService(new Intent(Main.this, TrackerService.class));
+					btn_toggle.setText("Start Tracker");
 				}
-			}			
+			}
 		});
 	}
 
 	@Override
-	protected void onResume()
+	public void onDestroy()
 	{
-		super.onResume();
-
-		if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+		super.onDestroy();
+		try
 		{
-			Toast.makeText(this, "Please enable your GPS!", 10000).show();
+			doUnbindService();
+		} catch (Throwable t)
+		{
+			t.printStackTrace();
+		}
+	}
+
+	/**
+	 * Service Communications
+	 */
+	
+	private class TrackerServiceIncomingHandler extends Handler
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			switch (msg.what)
+			{
+				case TrackerService.MSG_GPS_DATA:
+					Bundle b = msg.getData();
+					txt_latitude.setText(b.getString("longitude"));
+					txt_longitude.setText(b.getString("latitude"));
+					txt_altitude.setText(b.getString("altitude"));
+					txt_speed.setText(b.getString("speed"));
+					txt_lastupdated.setText(b.getString("time"));
+					break;
+				default:
+					super.handleMessage(msg);
+					break;
+			}
+		}
+	}
+
+	private ServiceConnection tsConnection = new ServiceConnection()
+	{
+		public void onServiceConnected(ComponentName name, IBinder service)
+		{
+			tsOutgoing = new Messenger(service);
+			try
+			{
+				Message msg = Message.obtain(null, TrackerService.MSG_REGISTER_CLIENT);
+				msg.replyTo = tsIncoming;
+				tsOutgoing.send(msg);
+			} catch (RemoteException e)
+			{
+				e.printStackTrace();
+			}
+		}
+
+		public void onServiceDisconnected(ComponentName name)
+		{
+			tsOutgoing = null;
+		}
+	};
+
+	private void doBindService()
+	{
+		bindService(new Intent(this, TrackerService.class), tsConnection, Context.BIND_AUTO_CREATE);
+		isBound = true;
+	}
+
+	private void doUnbindService()
+	{
+		if (!isBound) return;
+
+		if (tsOutgoing != null)
+		{
+			try
+			{
+				Message msg = Message.obtain(null, TrackerService.MSG_DEREGISTER_CLIENT);
+				msg.replyTo = tsIncoming;
+				tsOutgoing.send(msg);
+			} catch (RemoteException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		unbindService(tsConnection);
+		isBound = false;
+	}
+
+	/**
+	 * Dialog & Menu
+	 */
+	
+	@Override
+	protected Dialog onCreateDialog(int id)
+	{
+		switch (id)
+		{
+			case DIALOG_SET_CALLSIGN:
+				LayoutInflater inflater = LayoutInflater.from(this);
+				final View layout = inflater.inflate(R.layout.callsign_dialog, null);
+				final EditText txt_editCallsign = (EditText) layout.findViewById(R.id.txt_callsign_dialog);
+				txt_editCallsign.setText(callsign);
+
+				final AlertDialog d = new AlertDialog.Builder(this).setTitle("Set Callsign").setView(layout)
+						.setPositiveButton("OK", null).create();
+
+				d.setOnDismissListener(new DialogInterface.OnDismissListener()
+				{
+					public void onDismiss(DialogInterface dialog)
+					{
+						String nc = txt_editCallsign.getText().toString();
+						if (nc.equals(""))
+						{
+							txt_editCallsign.setError("Please enter a callsign");
+							d.show();
+						} else
+						{
+							setNewCallsign(nc);
+						}
+					}
+				});
+
+				return d;
+				
+			default:
+				return super.onCreateDialog(id);
 		}
 	}
 
 	@Override
-	protected void onDestroy()
+	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		super.onDestroy();
-		locationManager.removeUpdates(locationListener);
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.options, menu);
+		return true;
 	}
 
-	protected class MainLocationListener implements LocationListener
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		public void onLocationChanged(Location l)
+		switch (item.getItemId())
 		{
-			location = l;
+			case R.id.opt_callsign:
+				showDialog(DIALOG_SET_CALLSIGN);
+				return true;
+			case R.id.opt_about:
 
-			updateFields();
-		}
-
-		public void onProviderDisabled(String p)
-		{
-		}
-
-		public void onProviderEnabled(String p)
-		{
-		}
-
-		public void onStatusChanged(String p, int s, Bundle e)
-		{
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
 		}
 	}
+
+	/**
+	 * Helper Functions
+	 */
 	
-	protected String getDevice()
+	// Check if tracker service is running
+	private boolean trackerServiceRunning()
 	{
-		String id = "%s %s; Android %s";
-		
-		return String.format(id, android.os.Build.BRAND, android.os.Build.MODEL, android.os.Build.VERSION.RELEASE);
+		ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+		for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE))
+		{
+			if ("com.pexat.habhub.chasecartracker.TrackerService".equals(service.service.getClassName()))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
-	
-	protected String getClient()
-	{		
-		return "HabHub Chase Car Tracker; Priyesh Patel";
-	}
-	
-	protected void updateFields()
+
+	// Set a new callsign
+	private void setNewCallsign(String c)
 	{
-		txt_latitude.setText(Double.toString(location.getLatitude()));
-		txt_longitude.setText(Double.toString(location.getLongitude()));
-		txt_altitude.setText(Double.toString(location.getAltitude()));
-		txt_speed.setText(Double.toString(location.getSpeed()));
+		if (c.equals(""))
+		{
+			showDialog(DIALOG_SET_CALLSIGN);
+			return;
+		}
+
+		callsign = c;
+		txt_callsign.setText(callsign + "_chase");
+
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putString("callsign", callsign);
+		editor.commit();
+
+		if (isBound && tsOutgoing != null)
+		{
+			try
+			{
+				Bundle b = new Bundle();
+				b.putString("callsign", callsign);
+				Message msg = Message.obtain(null, TrackerService.MSG_SET_CALLSIGN);
+				msg.setData(b);
+				msg.replyTo = tsIncoming;
+				tsOutgoing.send(msg);
+			} catch (RemoteException e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 }

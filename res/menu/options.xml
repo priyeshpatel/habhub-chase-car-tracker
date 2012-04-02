@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item
+        android:title="Callsign"
+        android:id="@+id/opt_callsign"
+        android:icon="@drawable/callsign" >
+    </item>
+    <item
+        android:title="About"
+        android:id="@+id/opt_about"
+        android:icon="@drawable/about" >
+    </item>
+</menu>

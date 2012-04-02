@@ -37,8 +37,6 @@ public class HabitatInterface
 		StringEntity stringdata = null;
 		try
 		{
-			System.out.println(putURL);
-			System.out.println(l.getJSON());
 			stringdata = new StringEntity(l.getJSON());
 		} catch (UnsupportedEncodingException e)
 		{
