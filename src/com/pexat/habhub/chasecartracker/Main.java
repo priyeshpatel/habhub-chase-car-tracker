@@ -108,8 +108,8 @@ public class Main extends Activity {
 			switch (msg.what) {
 				case TrackerService.MSG_GPS_DATA :
 					Bundle b = msg.getData();
-					txt_latitude.setText(b.getString("longitude"));
-					txt_longitude.setText(b.getString("latitude"));
+					txt_latitude.setText(b.getString("latitude"));
+					txt_longitude.setText(b.getString("longitude"));
 					txt_altitude.setText(b.getString("altitude"));
 					txt_speed.setText(b.getString("speed"));
 					txt_lastupdated.setText(b.getString("time"));

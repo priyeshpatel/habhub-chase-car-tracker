@@ -56,10 +56,16 @@ public class TrackerService extends Service {
 		locationListener = new MainLocationListener();
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 60000, 0, locationListener);
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 60000, 0, locationListener);
-
-		location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		time_lastupdated.setToNow();
+		location = null;
+		
+		if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 60000, 0, locationListener);
+			Location networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			if (isBetterLocation(networkLocation, location)) {
+				location = networkLocation;
+				time_lastupdated.setToNow();
+			}
+		}
 
 		if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			Toast.makeText(getApplicationContext(), "Please enable your GPS!", Toast.LENGTH_LONG).show();

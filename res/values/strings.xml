@@ -4,9 +4,7 @@
     <string name="app_name">Chase Car Tracker</string>
     <string name="release_date">02 April 2012</string>
     <string name="author_url">http://pexat.com</string>
-    
-    <string name="about_title">About</string>
-    
+       
     <string name="service_name">Chase Car Service</string>
     <string name="service_notification">Chase Car Tracker Running</string>
     <string name="service_notification_title">Chase Car Tracker</string>
@@ -19,4 +17,6 @@
     <string name="main_label_last_updated">Last Updated</string>
     <string name="main_button_toggle">Start Tracker</string>
 
+    <string name="about_title">About</string>
+    
 </resources>
