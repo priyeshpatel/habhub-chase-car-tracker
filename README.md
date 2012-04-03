@@ -7,7 +7,7 @@ An Android application to relay location data from the device to Habitat as `lis
 This app is available on the [Google Play Store](https://play.google.com/store/apps/details?id=com.pexat.habhub.chasecartracker).
 
 ## Authors
-Written by Priyesh Patel. See AUTHORS for more information.
+Written by Priyesh Patel. Artwork by Daniel Saul. See AUTHORS for more information.
 
 ## ChangeLog
 See CHANGELOG.md.
