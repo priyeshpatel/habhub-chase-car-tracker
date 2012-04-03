@@ -1,7 +1,5 @@
 package com.pexat.habhub.chasecartracker;
 
-import java.text.DecimalFormat;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,9 +33,9 @@ public class ListenerTelemetry {
 	}
 
 	public void setLocationData(Location l) {
-		this.latitude = Double.valueOf(new DecimalFormat("#.######").format(l.getLatitude()));
-		this.longitude = Double.valueOf(new DecimalFormat("#.######").format(l.getLongitude()));
-		this.speed = Double.valueOf(new DecimalFormat("#.##").format((l.getSpeed() / 1000) * 3600));
+		this.latitude = (double) Math.round(l.getLatitude() * 1000000) / 1000000;
+		this.longitude = (double) Math.round(l.getLongitude() * 1000000) / 1000000;
+		this.speed = (double) Math.round(((l.getSpeed() / 1000) * 3600) * 100) / 100;
 		this.altitude = Math.round(l.getAltitude());
 	}
 

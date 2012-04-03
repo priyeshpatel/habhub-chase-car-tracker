@@ -1,6 +1,5 @@
 package com.pexat.habhub.chasecartracker;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -102,7 +101,7 @@ public class TrackerService extends Service {
 
 			location = l;
 			time_lastupdated.setToNow();
-			sendData(location, time_lastupdated);
+			sendDataToUI(location, time_lastupdated);
 
 			new Thread(new Runnable() {
 				public void run() {
@@ -142,7 +141,7 @@ public class TrackerService extends Service {
 			switch (msg.what) {
 				case MSG_REGISTER_CLIENT :
 					messengerClients.add(msg.replyTo);
-					sendData(location, time_lastupdated);
+					sendDataToUI(location, time_lastupdated);
 					break;
 				case MSG_DEREGISTER_CLIENT :
 					messengerClients.remove(msg.replyTo);
@@ -156,17 +155,17 @@ public class TrackerService extends Service {
 		}
 	}
 
-	private void sendData(Location l, Time t) {
+	private void sendDataToUI(Location l, Time t) {
 		if (l == null)
 			return;
 
 		for (int i = messengerClients.size() - 1; i >= 0; i--) {
 			try {
 				Bundle b = new Bundle();
-				b.putString("latitude", Double.toString(Double.valueOf(new DecimalFormat("#.######").format(l.getLatitude()))));
-				b.putString("longitude", Double.toString(Double.valueOf(new DecimalFormat("#.######").format(l.getLongitude()))));
+				b.putString("latitude", Double.toString((double) Math.round(l.getLatitude() * 1000000) / 1000000));
+				b.putString("longitude", Double.toString((double) Math.round(l.getLongitude() * 1000000) / 1000000));
 				b.putString("altitude", Long.toString(Math.round(l.getAltitude())));
-				b.putString("speed", Float.toString(Float.valueOf(new DecimalFormat("#.##").format((l.getSpeed() / 1000) * 3600))));
+				b.putString("speed", Float.toString((float) Math.round(((l.getSpeed() / 1000) * 3600) * 100) / 100));
 				b.putString("time", t.format("%H:%M:%S"));
 				Message msg = Message.obtain(null, MSG_GPS_DATA);
 				msg.setData(b);
