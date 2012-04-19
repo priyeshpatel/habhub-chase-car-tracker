@@ -37,8 +37,9 @@ public class TrackerService extends Service {
 	private LocationManager locationManager;
 	private LocationListener locationListener;
 	private Location location;
-	private Time time_lastupdated = new Time();
-
+	private Time time_lastUpdated = new Time();
+	private boolean firstUpdate = false;
+	
 	// Callsign
 	private String callsign;
 
@@ -62,7 +63,7 @@ public class TrackerService extends Service {
 			Location networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 			if (isBetterLocation(networkLocation, location)) {
 				location = networkLocation;
-				time_lastupdated.setToNow();
+				time_lastUpdated.setToNow();
 			}
 		}
 
@@ -72,7 +73,7 @@ public class TrackerService extends Service {
 			Location GPSLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 			if (isBetterLocation(GPSLocation, location)) {
 				location = GPSLocation;
-				time_lastupdated.setToNow();
+				time_lastUpdated.setToNow();
 			}
 		}
 	}
@@ -96,24 +97,22 @@ public class TrackerService extends Service {
 
 	private class MainLocationListener implements LocationListener {
 		public void onLocationChanged(Location l) {
-			if (!isBetterLocation(l, location))
+			// Check if new location has come in too soon
+			Time time_current = new Time();
+			time_current.setToNow();
+			long timeDelta = Long.valueOf(time_current.format("%s")) - Long.valueOf(time_lastUpdated.format("%s"));
+			if (timeDelta < 45 && firstUpdate)
+				return;
+
+			// Check if location is better than current location
+			if (!isBetterLocation(l, location) && firstUpdate)
 				return;
 
 			location = l;
-			time_lastupdated.setToNow();
-			sendDataToUI(location, time_lastupdated);
-
-			new Thread(new Runnable() {
-				public void run() {
-					Time time = new Time(Time.TIMEZONE_UTC);
-					time.setToNow();
-
-					ListenerTelemetry telemetry = new ListenerTelemetry(callsign, location, time, AppInfo.getDevice(), AppInfo.getDeviceSoftware(), AppInfo.getApplication(),
-							AppInfo.getApplicationVersion(getApplicationContext()));
-
-					HabitatInterface.sendListenerTelemetry(telemetry);
-				}
-			}).start();
+			time_lastUpdated.setToNow();
+			firstUpdate = true;
+			sendDataToUI(location, time_lastUpdated);
+			sendDataToHabitat();
 		}
 
 		public void onProviderDisabled(String p) {
@@ -124,6 +123,24 @@ public class TrackerService extends Service {
 
 		public void onStatusChanged(String p, int s, Bundle e) {
 		}
+	}
+	
+	/**
+	 * HTTP
+	 */
+	
+	private void sendDataToHabitat() {
+		new Thread(new Runnable() {
+			public void run() {
+				Time time = new Time(Time.TIMEZONE_UTC);
+				time.setToNow();
+
+				ListenerTelemetry telemetry = new ListenerTelemetry(callsign, location, time, AppInfo.getDevice(), AppInfo.getDeviceSoftware(), AppInfo.getApplication(),
+						AppInfo.getApplicationVersion(getApplicationContext()));
+
+				HabitatInterface.sendListenerTelemetry(telemetry);
+			}
+		}).start();
 	}
 
 	/**
@@ -141,7 +158,7 @@ public class TrackerService extends Service {
 			switch (msg.what) {
 				case MSG_REGISTER_CLIENT :
 					messengerClients.add(msg.replyTo);
-					sendDataToUI(location, time_lastupdated);
+					sendDataToUI(location, time_lastUpdated);
 					break;
 				case MSG_DEREGISTER_CLIENT :
 					messengerClients.remove(msg.replyTo);
