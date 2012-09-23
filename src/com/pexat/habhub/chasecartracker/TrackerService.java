@@ -132,7 +132,7 @@ public class TrackerService extends Service {
 	private void sendDataToHabitat() {
 		new Thread(new Runnable() {
 			public void run() {
-				Time time = new Time(Time.TIMEZONE_UTC);
+				Time time = new Time();
 				time.setToNow();
 
 				ListenerTelemetry telemetry = new ListenerTelemetry(callsign, location, time, AppInfo.getDevice(), AppInfo.getDeviceSoftware(), AppInfo.getApplication(),

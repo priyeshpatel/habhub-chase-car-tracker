@@ -17,7 +17,7 @@ public class AppInfo {
 	}
 
 	public static String getApplication() {
-		return "HabHub Chase Car Tracker; Priyesh Patel";
+		return "HabHub Chase Car Tracker (Android)";
 	}
 	
 	public static String getApplicationVersion(Context c) {
