@@ -32,7 +32,7 @@ public class ListenerTelemetry {
 	public void setLocationData(Location l) {
 		this.latitude = (double) Math.round(l.getLatitude() * 1000000) / 1000000;
 		this.longitude = (double) Math.round(l.getLongitude() * 1000000) / 1000000;
-		this.speed = (double) Math.round(((l.getSpeed() / 1000) * 3600) * 100) / 100;
+		this.speed = (double) Math.round(l.getSpeed() * 100) / 100;
 		this.altitude = Math.round(l.getAltitude());
 	}
 
